@@ -1,0 +1,9 @@
+*.o
+out.ppm
+check_malloc
+check_stack
+check_queue
+maze_solver_bfs
+maze_solver_dfs
+check_null
+*.gz
