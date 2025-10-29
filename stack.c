@@ -17,12 +17,11 @@
  * @push: the number of times the stack has been pushed to
  * @pop: the number of times the stack has been popped
  * @max: the maximum @length that has been reached
- * @data: an array within the structure where the items are stored
+ * @data: a pointer to the items on the stack
  *
- * This is a straightforward implementation of a stack. Since the
- * stack structure is always stored on the heap and never resized,
- * it is simpler to store the data inside the structure instead of
- * having the structure point to another location in memory.
+ * This is a straightforward implementation of a stack. Since the stack
+ * may be resized, we cannot store the items inside the structure itself,
+ * and instead we have to store the items in another region in memory.
  */
 struct stack {
     size_t length;
@@ -30,12 +29,19 @@ struct stack {
     size_t push;
     size_t pop;
     size_t max;
-    int data[];
+    int *data;
 };
 
+
 struct stack *stack_init(size_t capacity) {
-    struct stack *s = malloc(sizeof(struct stack) + capacity * sizeof(int));
+    struct stack *s = malloc(sizeof(struct stack));
     if (s == NULL) {
+        return NULL;
+    }
+
+    s->data = malloc(capacity * sizeof(int));
+    if (s->data == NULL) {
+        free(s);
         return NULL;
     }
 
@@ -67,6 +73,17 @@ void stack_stats(const struct stack *s) {
 int stack_push(struct stack *s, int c) {
     if (s == NULL) {
         return 1;
+    }
+
+    if (s->length >= s->capacity) {
+        size_t new_capacity = s->capacity * 2;
+        int *new = realloc(s->data, new_capacity * sizeof(int));
+        if (new == NULL) {
+            return 1;
+        }
+
+        s->capacity = new_capacity;
+        s->data = new;
     }
 
     if (s->length >= s->capacity) {

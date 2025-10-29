@@ -19,12 +19,11 @@
  * @push: the number of times the queue has been pushed to
  * @pop: the number of times the queue has been popped
  * @max: the maximum @length that has been reached
- * @data: an array within the structure where the items are stored
+ * @data: a pointer to the items in the queue
  *
- * This is a straightforward implementation of a queue. Since the
- * queue structure is always stored on the heap and never resized,
- * it is simpler to store the data inside the structure instead of
- * having the structure point to another location in memory.
+ * This is a straightforward implementation of a queue. Since the queue
+ * may be resized, we cannot store the items inside the structure itself,
+ * and instead we have to store the items in another region in memory.
  */
 struct queue {
     size_t length;
@@ -34,12 +33,18 @@ struct queue {
     size_t push;
     size_t pop;
     size_t max;
-    int data[];
+    int *data;
 };
 
 struct queue *queue_init(size_t capacity) {
-    struct queue *q = malloc(sizeof(struct queue) + capacity * sizeof(int));
+    struct queue *q = malloc(sizeof(struct queue));
     if (q == NULL) {
+        return NULL;
+    }
+
+    q->data = malloc(capacity * sizeof(int));
+    if (q->data == NULL) {
+        free(q);
         return NULL;
     }
 
@@ -75,8 +80,15 @@ int queue_push(struct queue *q, int e) {
         return 1;
     }
     
-    if (q->length >= q->capacity) {
-        return 1;
+    if (q->length >= q->capacity - 1) {
+        size_t new_capacity = q->capacity * 2;
+        int *new = realloc(q->data, new_capacity * sizeof(int));
+        if (new == NULL) {
+            return 1;
+        }
+
+        q->capacity = new_capacity;
+        q->data = new;
     }
 
     q->data[q->head++] = e;
