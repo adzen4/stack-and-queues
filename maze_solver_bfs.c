@@ -1,3 +1,10 @@
+/*
+ * maze_solver_bfs.c -- a breadth-first search maze solver
+ *
+ * Artsiom Dzenisiuk 16141253
+ * Universiteit van Amsterdam
+ */
+
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
