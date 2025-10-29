@@ -32,7 +32,6 @@ struct stack {
     int *data;
 };
 
-
 struct stack *stack_init(size_t capacity) {
     struct stack *s = malloc(sizeof(struct stack));
     if (s == NULL) {
@@ -59,6 +58,7 @@ void stack_cleanup(struct stack *s) {
         return;
     }
 
+    free(s->data);
     free(s);
 }
 
@@ -76,7 +76,7 @@ int stack_push(struct stack *s, int c) {
     }
 
     if (s->length >= s->capacity) {
-        size_t new_capacity = s->capacity * 2;
+        size_t new_capacity = s->capacity * 2 + 1;
         int *new = realloc(s->data, new_capacity * sizeof(int));
         if (new == NULL) {
             return 1;
@@ -86,11 +86,7 @@ int stack_push(struct stack *s, int c) {
         s->data = new;
     }
 
-    if (s->length >= s->capacity) {
-        return 1;
-    }
-
-    s->data[s->length++] = c;    
+    s->data[s->length++] = c;
     s->push++;
 
     if (s->length > s->max) {

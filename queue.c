@@ -64,6 +64,7 @@ void queue_cleanup(struct queue *q) {
         return;
     }
     
+    free(q->data);
     free(q);
 }
 
@@ -80,15 +81,35 @@ int queue_push(struct queue *q, int e) {
         return 1;
     }
     
-    if (q->length >= q->capacity - 1) {
-        size_t new_capacity = q->capacity * 2;
-        int *new = realloc(q->data, new_capacity * sizeof(int));
+    if (q->length >= q->capacity) {
+        size_t new_capacity = q->capacity * 2 + 1;
+        int *new = malloc(new_capacity * sizeof(int));
         if (new == NULL) {
             return 1;
         }
 
-        q->capacity = new_capacity;
+        /*
+         * Now we need to move the data from the old array
+         * into the new array. This is more complicated than regular
+         * array resizing. We need to reorder the items, head and tail
+         * so that they form a simple array that starts at index 0.
+         */
+
+        for (size_t i = 0; i < q->length; i++) {
+            size_t old_index = i + q->tail;
+            if (old_index >= q->capacity) {
+                old_index -= q->capacity;
+            }
+            
+            new[i] = q->data[old_index];
+        }
+
+        free(q->data);
+
+        q->tail = 0;
+        q->head = q->length;
         q->data = new;
+        q->capacity = new_capacity;
     }
 
     q->data[q->head++] = e;
@@ -116,9 +137,8 @@ int queue_pop(struct queue *q) {
         return -1;
     }
 
-    int value = q->data[q->tail];
+    int value = q->data[q->tail++];
 
-    q->tail++;
     if (q->tail >= q->capacity) {
         q->tail -= q->capacity;
     }
